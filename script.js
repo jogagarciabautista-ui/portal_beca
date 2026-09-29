@@ -2,8 +2,8 @@
 // CONEXIÓN CON SUPABASE
 // ============================================
 
+const SUPABASE_URL = "https://eokrwbhdmyjilhnwsmc.supabase.co/rest/v1/";
 
-const SUPABASE_URL = "https://eokrwbhdmyjilhnwsmc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_U1GSINIZO_dvcPqgUoyjvg_orhyw6cr";
 
 
