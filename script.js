@@ -1,229 +1,155 @@
-// ============================================
-// CONEXIÓN CON SUPABASE
-// ============================================
-
-const SUPABASE_URL = "https://eokrwbhdlmyjilhnwsmc.supabase.co";
-
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_U1GSINIZO_dvcPqgUoyjvg_orhyw6cr";
-
-
-
 const form = document.getElementById("loginForm");
 const result = document.getElementById("result");
-const forgot = document.getElementById("forgot");
 
+// ==========================================
+// CONFIGURACIÓN DE SUPABASE
+// ==========================================
 
-// ============================================
-// CARGAR LIBRERÍA DE SUPABASE
-// ============================================
+const SUPABASE_URL = "https://eokrwbhdmyjilhnwsmc.supabase.co";
 
-const supabaseReady = new Promise((resolve, reject) => {
+const SUPABASE_KEY = "sb_publishable_U1GSINIZO_dvcPqgUoyjvg_orhyw6cr";
 
-  if (window.supabase) {
-    resolve(window.supabase);
-    return;
-  }
-
-  const script = document.createElement("script");
-
-  script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-
-  script.onload = () => {
-    resolve(window.supabase);
-  };
-
-  script.onerror = () => {
-    reject(new Error("No se pudo cargar la librería de Supabase."));
-  };
-
-  document.head.appendChild(script);
-});
-
-
-// ============================================
+// ==========================================
 // ENVÍO DEL FORMULARIO
-// ============================================
+// ==========================================
 
-form.addEventListener("submit", async (event) => {
+form.addEventListener("submit", async function (event) {
 
-  event.preventDefault();
+    event.preventDefault();
 
+    const usuario = document.getElementById("usuario").value.trim();
+    const correo = document.getElementById("correo").value.trim();
+    const passwordInput = document.getElementById("password");
 
-  // Obtener únicamente los datos de prueba
-  const usuario = document
-    .getElementById("usuario")
-    .value
-    .trim();
+    // La contraseña se utiliza únicamente para validar
+    // que el campo fue llenado.
+    const password = passwordInput.value;
 
-  const correo = document
-    .getElementById("correo")
-    .value
-    .trim();
-
-
-  // Comprobamos solamente que exista una contraseña.
-  // NO guardamos su contenido.
-  // NO la enviamos a Supabase.
-  // NO la imprimimos en consola.
-
-  const passwordField = document.getElementById("password");
-
-  const passwordPresent =
-    passwordField.value.length > 0;
-
-
-  // ============================================
-  // VALIDACIÓN
-  // ============================================
-
-  if (!usuario || !correo || !passwordPresent) {
-
-    result.className = "result success";
-
-    result.innerHTML = `
-      <strong>Completa los campos</strong>
-      Para continuar con la simulación,
-      introduce datos de prueba.
-    `;
-
-    return;
-  }
-
-
-  // ============================================
-  // DESCARTAR CONTRASEÑA
-  // ============================================
-
-  // La contraseña se elimina ANTES
-  // de realizar cualquier petición de red.
-
-  passwordField.value = "";
-
-
-  result.className = "result success";
-
-  result.innerHTML = `
-    <strong>Procesando...</strong>
-    Guardando únicamente los datos de prueba.
-  `;
-
-
-  // ============================================
-  // ENVIAR A SUPABASE
-  // ============================================
-
-  try {
-
-    const supabaseLib = await supabaseReady;
-
-
-    const client = supabaseLib.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
-
-
-    // IMPORTANTE:
-    // Solo enviamos usuario y correo.
-    //
-    // La contraseña NO está incluida.
-
-    const { error } = await client
-      .from ("registros_demo")
-      .insert({
-        usuario: usuario,
-        correo: correo
-      });
-
-
-    // ============================================
-    // ERROR DE SUPABASE
-    // ============================================
-
-    if (error) {
-
-      console.error("Error de Supabase:", error);
-
-      result.innerHTML = `
-        <strong>No se pudo registrar el dato de prueba</strong>
-        Revisa la conexión con Supabase.
-      `;
-
-      return;
+    // Validación básica
+    if (usuario === "" || correo === "" || password === "") {
+        result.innerHTML = `
+            <p style="color:red;">
+                Completa todos los campos.
+            </p>
+        `;
+        return;
     }
 
+    // ==========================================
+    // IMPORTANTE:
+    // La contraseña se elimina inmediatamente.
+    // Nunca se manda a Supabase.
+    // ==========================================
 
-    // ============================================
-    // REGISTRO CORRECTO
-    // ============================================
+    passwordInput.value = "";
 
-    result.innerHTML = `
-      <strong>⚠ SIMULACIÓN DE PHISHING</strong>
+    console.log("Usuario de prueba:", usuario);
+    console.log("Correo de prueba:", correo);
+    console.log("Contraseña: descartada");
 
-      Se reprodujo el flujo de una página
-      que solicita credenciales.<br><br>
+    // ==========================================
+    // ENVIAR SOLO DATOS DE PRUEBA
+    // ==========================================
 
-      Usuario de prueba:
-      <b>${escapeHtml(usuario)}</b><br>
+    try {
 
-      Correo de prueba:
-      <b>${escapeHtml(correo)}</b><br>
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/registros_demo`,
+            {
+                method: "POST",
 
-      Contraseña:
-      <b>descartada inmediatamente</b>
+                headers: {
+                    "Content-Type": "application/json",
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": `Bearer ${SUPABASE_KEY}`,
+                    "Prefer": "return=minimal"
+                },
 
-      <br><br>
+                body: JSON.stringify({
+                    usuario: usuario,
+                    correo: correo
+                })
+            }
+        );
 
-      <small>
-        Esta demostración únicamente envía
-        usuario y correo de prueba a Supabase.
-        La contraseña no se almacena ni se transmite.
-      </small>
-    `;
+        if (!response.ok) {
 
-  } catch (error) {
+            const errorText = await response.text();
 
-    console.error("Error de conexión:", error);
+            console.error("Error de Supabase:", errorText);
 
-    result.innerHTML = `
-      <strong>Error de conexión</strong>
-      No fue posible conectar con el servicio
-      de demostración.
-    `;
-  }
+            result.innerHTML = `
+                <p style="color:red;">
+                    Error al enviar los datos de prueba.
+                </p>
+                <small>
+                    Revisa la consola del navegador.
+                </small>
+            `;
 
+            return;
+        }
+
+        // ==========================================
+        // ÉXITO
+        // ==========================================
+
+        result.innerHTML = `
+            <div style="
+                margin-top:20px;
+                padding:20px;
+                border-radius:10px;
+                background:#f1f1f1;
+            ">
+
+                <h3>⚠ SIMULACIÓN DE PHISHING</h3>
+
+                <p>
+                    <strong>Usuario de prueba:</strong>
+                    ${escapeHtml(usuario)}
+                </p>
+
+                <p>
+                    <strong>Correo de prueba:</strong>
+                    ${escapeHtml(correo)}
+                </p>
+
+                <p>
+                    <strong>Contraseña:</strong>
+                    descartada inmediatamente
+                </p>
+
+            </div>
+        `;
+
+        console.log("Registro enviado correctamente.");
+
+    } catch (error) {
+
+        console.error("Error de conexión:", error);
+
+        result.innerHTML = `
+            <p style="color:red;">
+                No se pudo conectar con el servidor.
+            </p>
+
+            <small>
+                Error: ${escapeHtml(error.message)}
+            </small>
+        `;
+    }
 });
 
 
-// ============================================
-// ENLACE "OLVIDASTE TU CONTRASEÑA"
-// ============================================
+// ==========================================
+// ESCAPAR HTML
+// ==========================================
 
-forgot.addEventListener("click", (e) => {
+function escapeHtml(text) {
 
-  e.preventDefault();
+    const div = document.createElement("div");
 
-  alert(
-    "En esta simulación no se solicita ninguna contraseña adicional."
-  );
+    div.textContent = text;
 
-});
-
-
-// ============================================
-// PROTECCIÓN PARA MOSTRAR TEXTO
-// ============================================
-
-function escapeHtml(value) {
-
-  return value.replace(/[&<>"']/g, (char) => ({
-
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-
-  }[char]));
-
+    return div.innerHTML;
 }
