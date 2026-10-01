@@ -129,7 +129,7 @@ form.addEventListener("submit", async (event) => {
     // La contraseña NO está incluida.
 
     const { error } = await client
-      .from("registros_demo")
+      .from ("registros_demo")
       .insert({
         usuario: usuario,
         correo: correo
